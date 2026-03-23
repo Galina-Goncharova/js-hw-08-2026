@@ -2,22 +2,40 @@ import '../css/common.css';
 import Player from '@vimeo/player';
 import throttle from 'lodash.throttle';
 
-    const iframe = document.querySelector('iframe');
-    const player = new Vimeo.Player(iframe);
-    const keyLocalStorage = 'videoplayer-current-time';
+const iframe = document.querySelector('iframe');
+const player = new Vimeo.Player(iframe);
+const key = 'videoplayer-current-time';
 
-    const onPlay = function (data) {
-    const stringData = JSON.stringify(data);
-    localStorage.setItem(keyLocalStorage, stringData);
-};
+player.on('timeupdate', throttle(onSaveCurrentTime, 1000));
+player.on('play', onStartPlay);
 
-player.on('timeupdate', throttle(onPlay, 1000));
+function onStartPlay() {
+  player
+    .setCurrentTime(parseFloat(localStorage.getItem(key)))
+    .then(function (seconds) {})
+    .catch(function (error) {
+      switch (error.name) {
+        case 'RangeError':
+          // the time was less than 0 or greater than the video’s duration
+          console.log('Error!');
+          break;
 
-function reload() {
-  if (JSON.parse(localStorage.getItem(keyLocalStorage)) === null) {
-    return;
-  }
-  const timePause = JSON.parse(localStorage.getItem(keyLocalStorage));
-  player.setCurrentTime(timePause.seconds);
+        default:
+          // some other error occurred
+          break;
+      }
+    });
 }
-reload();
+
+function onSaveCurrentTime() {
+  player
+    .getCurrentTime()
+    .then(function (seconds) {
+      // seconds = the current playback position
+      localStorage.setItem(key, seconds);
+    })
+    .catch(function (error) {
+      // an error occurred
+      console.log('Error!');
+    });
+}
