@@ -10,21 +10,24 @@ player.on('timeupdate', throttle(onSaveCurrentTime, 1000));
 player.on('play', onStartPlay);
 
 function onStartPlay() {
-  player
-    .setCurrentTime(parseFloat(localStorage.getItem(key)))
-    .then(function (seconds) {})
-    .catch(function (error) {
-      switch (error.name) {
-        case 'RangeError':
-          // the time was less than 0 or greater than the video’s duration
-          console.log('Error!');
-          break;
+  const savedTime = localStorage.getItem(key);
+  if (savedTime) {
+    player
+      .setCurrentTime(parseFloat(savedTime))
+      .then(function (seconds) {})
+      .catch(function (error) {
+        switch (error.name) {
+          case 'RangeError':
+            // the time was less than 0 or greater than the video’s duration
+            console.log('Error!');
+            break;
 
-        default:
-          // some other error occurred
-          break;
-      }
-    });
+          default:
+            // some other error occurred
+            break;
+        }
+      });
+  }
 }
 
 function onSaveCurrentTime() {
